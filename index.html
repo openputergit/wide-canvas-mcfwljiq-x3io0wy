@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FightGear Pro | Premium MMA Apparel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(45deg, #000000, #004d2e);
+            min-height: 100vh;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 77, 46, 0.3);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation -->
+    <nav class="bg-black/90 fixed w-full z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-green-500">FightGear Pro</div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#home" class="hover:text-green-500">Home</a>
+                    <a href="#products" class="hover:text-green-500">Products</a>
+                    <a href="#contact" class="hover:text-green-500">Contact</a>
+                    <button class="flex items-center hover:text-green-500" id="cartButton">
+                        <i class="bi bi-cart3 mr-2"></i>
+                        Cart (<span id="cartCount">0</span>)
+                    </button>
+                </div>
+                <button class="md:hidden" id="mobileMenuBtn">
+                    <i class="bi bi-list text-2xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="fixed top-0 left-0 w-full h-full bg-black/95 z-40 hidden">
+        <div class="flex flex-col items-center pt-20 space-y-6">
+            <a href="#home" class="text-xl hover:text-green-500">Home</a>
+            <a href="#products" class="text-xl hover:text-green-500">Products</a>
+            <a href="#contact" class="text-xl hover:text-green-500">Contact</a>
+            <button class="flex items-center text-xl hover:text-green-500">
+                <i class="bi bi-cart3 mr-2"></i>
+                Cart (<span class="mobile-cart-count">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-24 pb-12">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6">DOMINATE THE OCTAGON</h1>
+                <p class="text-xl md:text-2xl mb-8">Premium MMA Gear for Champions</p>
+                <a href="#products" class="bg-green-500 text-white px-8 py-3 rounded-md hover:bg-green-600 transition">
+                    Shop Now
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="py-12">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold mb-8 text-center">Our Products</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="productGrid"></div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-12 bg-black/50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold mb-8 text-center">Contact Us</h2>
+            <div class="max-w-md mx-auto">
+                <form id="contactForm" class="space-y-4">
+                    <input type="email" placeholder="Email" class="w-full px-4 py-2 rounded bg-gray-800 text-white" required>
+                    <textarea placeholder="Message" class="w-full px-4 py-2 rounded bg-gray-800 text-white h-32" required></textarea>
+                    <button type="submit" class="w-full bg-green-500 text-white px-6 py-3 rounded hover:bg-green-600">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="fixed inset-0 bg-black/80 hidden z-50">
+        <div class="bg-gray-900 max-w-md mx-auto mt-20 rounded-lg">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Shopping Cart</h3>
+                    <button id="closeCart" class="text-2xl">&times;</button>
+                </div>
+                <div id="cartItems" class="space-y-4 mb-4"></div>
+                <div class="border-t border-gray-700 pt-4">
+                    <div class="flex justify-between mb-4">
+                        <span>Total:</span>
+                        <span id="cartTotal">$0.00</span>
+                    </div>
+                    <button id="checkoutBtn" class="w-full bg-green-500 text-white px-6 py-3 rounded hover:bg-green-600">
+                        Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Product Data
+        const products = [
+            {
+                id: 1,
+                name: "Pro Fighter MMA Shorts",
+                price: 59.99,
+                description: "Professional grade MMA shorts with reinforced stitching",
+                image: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&q=80&w=500",
+                sizes: ["S", "M", "L", "XL"]
+            },
+            {
+                id: 2,
+                name: "Elite Combat Shorts",
+                price: 69.99,
+                description: "Lightweight and durable competition shorts",
+                image: "https://images.unsplash.com/photo-1562751362-404243c2eea3?auto=format&fit=crop&q=80&w=500",
+                sizes: ["S", "M", "L", "XL"]
+            },
+            {
+                id: 3,
+                name: "Champion Series Shorts",
+                price: 79.99,
+                description: "Premium quality shorts with advanced moisture-wicking",
+                image: "https://images.unsplash.com/photo-1571019613576-2b22c76fd955?auto=format&fit=crop&q=80&w=500",
+                sizes: ["S", "M", "L", "XL"]
+            }
+        ];
+
+        // Cart functionality
+        let cart = [];
+        
+        function renderProducts() {
+            const productGrid = document.getElementById('productGrid');
+            productGrid.innerHTML = products.map(product => `
+                <div class="product-card bg-gray-900 rounded-lg overflow-hidden transition duration-300">
+                    <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold mb-2">${product.name}</h3>
+                        <p class="text-gray-400 mb-2">${product.description}</p>
+                        <p class="text-green-500 font-bold mb-2">$${product.price}</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${product.sizes.map(size => `
+                                <button class="size-btn px-3 py-1 border border-green-500 rounded hover:bg-green-500">
+                                    ${size}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <button onclick="addToCart(${product.id})" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                cart.push({ ...product, quantity: 1 });
+                updateCartCount();
+                showNotification('Added to cart!');
+            }
+        }
+
+        function updateCartCount() {
+            const counts = document.querySelectorAll('#cartCount, .mobile-cart-count');
+            counts.forEach(count => count.textContent = cart.length);
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
+
+        function renderCart() {
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold">${item.name}</h4>
+                        <p class="text-sm text-gray-400">$${item.price}</p>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" class="text-red-500">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            cartTotal.textContent = `$${total.toFixed(2)}`;
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartCount();
+            renderCart();
+        }
+
+        // Event Listeners
+        document.getElementById('cartButton').addEventListener('click', () => {
+            document.getElementById('cartModal').classList.remove('hidden');
+            renderCart();
+        });
+
+        document.getElementById('closeCart').addEventListener('click', () => {
+            document.getElementById('cartModal').classList.add('hidden');
+        });
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        });
+
+        document.getElementById('checkoutBtn').addEventListener('click', () => {
+            if (cart.length === 0) {
+                showNotification('Cart is empty!');
+                return;
+            }
+            // Initialize Stripe checkout
+            const stripe = Stripe('your_publishable_key');
+            showNotification('Redirecting to checkout...');
+        });
+
+        // Initialize
+        renderProducts();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
